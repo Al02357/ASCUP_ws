@@ -1,0 +1,8 @@
+prefix=/home/flag/FLAG_ws/install
+
+Name: my_fsm
+Description: Description of my_fsm
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: roscpp rospy std_msgs std_srvs tf
