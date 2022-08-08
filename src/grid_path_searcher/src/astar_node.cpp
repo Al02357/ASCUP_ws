@@ -18,7 +18,8 @@
 #include <geometry_msgs/PointStamped.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
-
+#include <std_msgs/Int32.h>
+#include <std_srvs/Trigger.h>
 #include "Astar_searcher_2d.h"
 // #include "JPS_searcher.h"
 //#include "backward.hpp"
@@ -51,7 +52,9 @@ ros::Publisher  _grid_path_vis_pub,
                                _visited_nodes_vis_pub,
                                _grid_map_vis_pub,
                                _grid_path_pub,
-                               _grid_twist_pub;
+                               _grid_twist_pub,
+                               _arrived_pub;
+
 // Callback
 void rcvWaypointsCallback(const nav_msgs::Path & wp);
 void rcvPointCloudCallBack(const sensor_msgs::PointCloud2::ConstPtr & pointcloud_map_raw);
@@ -103,7 +106,6 @@ void rcvPointCloudCallBack(const sensor_msgs::PointCloud2::ConstPtr & pointcloud
         pt.y = cor_round(1);
         pt.z = 0;
         cloud_vis.points.push_back(pt);
-        auto pt_ = pt;
         Vector2i center_index = _astar_path_finder -> coord2gridIndex(Vector2d(pt.x, pt.y));
         Vector2d pt_around_d;
         Vector2i  pt_around_i;
@@ -136,13 +138,18 @@ void rcvPointCloudCallBack(const sensor_msgs::PointCloud2::ConstPtr & pointcloud
 
     _has_map = true;
     cout<<"[Astar] Pointcloud received."<<endl;
-
+    std_msgs::Int32 arr_msg;
     if(!_has_target)
     {
         ROS_WARN("[Astar] No target!");
     }else  {
         if(_astar_path_finder -> getData(_target_pt)) ROS_ERROR("[Astar] _target_pt is Occupied! PathFinding will not run!");
-        else if(_astar_path_finder->arrived(_start_pt,_target_pt)) ROS_WARN("[Astar] Arrived! PathFinding will not run!");
+        else if(_astar_path_finder->arrived(_start_pt,_target_pt)) 
+        {
+            ROS_WARN("[Astar] Arrived! PathFinding will not run!");
+            arr_msg.data = 1;
+            _arrived_pub.publish(arr_msg);
+        }
         else {
         if(_astar_path_finder->getData(_start_pt)) 
         {
@@ -150,6 +157,10 @@ void rcvPointCloudCallBack(const sensor_msgs::PointCloud2::ConstPtr & pointcloud
             _astar_path_finder -> cleanStartObs(_start_pt);
         }
         if(!pathFinding(_start_pt, _target_pt)) ROS_ERROR("[Astar] No path provide!"); 
+        else{
+            arr_msg.data = -1;
+            _arrived_pub.publish(arr_msg);
+        }
         }
     }
 }
@@ -219,6 +230,7 @@ int main(int argc, char** argv)
     _visited_nodes_vis_pub        = nh.advertise<visualization_msgs::Marker>("visited_nodes_vis",1);
     _grid_path_pub                     = nh.advertise<nav_msgs::Path>("grid_path",1);
     _grid_twist_pub                     = nh.advertise<nav_msgs::Path>("grid_twist",1);
+    _arrived_pub                           = nh.advertise<std_msgs::Int32>("target_arrived",1);
     
 
     nh.param("map/resolution",    _resolution,   0.2);

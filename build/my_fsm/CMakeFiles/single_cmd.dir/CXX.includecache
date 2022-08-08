@@ -57,6 +57,8 @@ mavros_msgs/State.h
 -
 bspline_race/BsplineTraj.h
 -
+std_srvs/Trigger.h
+-
 
 /home/flag/FLAG_ws/src/my_fsm/src/single_cmd.cpp
 ros/ros.h

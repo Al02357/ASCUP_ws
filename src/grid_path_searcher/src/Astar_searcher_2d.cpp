@@ -590,7 +590,6 @@ vector<Vector2d> AstarPathFinder2d::getTwist3(){
     int count_length = 1;
     if(ptr->cameFrom!=NULL){
         while(ptr -> cameFrom -> cameFrom != NULL){
-            cout<<"checkpoint"<<endl;
             // gridPath.push_back(ptr);
             thisNode = ptr -> index;
             ptr_ = ptr->cameFrom;

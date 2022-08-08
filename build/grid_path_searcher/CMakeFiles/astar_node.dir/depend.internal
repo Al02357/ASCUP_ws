@@ -443,6 +443,10 @@ grid_path_searcher/CMakeFiles/astar_node.dir/src/astar_node.cpp.o
  /opt/ros/melodic/include/sensor_msgs/point_field_conversion.h
  /opt/ros/melodic/include/std_msgs/ColorRGBA.h
  /opt/ros/melodic/include/std_msgs/Header.h
+ /opt/ros/melodic/include/std_msgs/Int32.h
+ /opt/ros/melodic/include/std_srvs/Trigger.h
+ /opt/ros/melodic/include/std_srvs/TriggerRequest.h
+ /opt/ros/melodic/include/std_srvs/TriggerResponse.h
  /opt/ros/melodic/include/visualization_msgs/Marker.h
  /opt/ros/melodic/include/visualization_msgs/MarkerArray.h
  /opt/ros/melodic/include/xmlrpcpp/XmlRpcDecl.h

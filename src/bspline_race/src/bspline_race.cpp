@@ -694,7 +694,7 @@ namespace FLAG_Race
 
     void plan_manager::esdf_map_subCallback(const std_msgs::Float64MultiArrayConstPtr &map_msg)
     {
-        // cout<< "get grid map"<<endl;
+        cout<< "get grid map"<<endl;
         get_map = true;
         map_size_x = map_msg->data[0];
         map_size_y = map_msg->data[1];

@@ -28,6 +28,7 @@ namespace fsm_func
         position_sub = nh.subscribe("/mavros/local_position/pose", 100, &drone_controller::pos_cb,this);
         voltage_sub = nh.subscribe("/mavros/battery", 300, &drone_controller::vtg_cb,this);
         bspline_sub = nh.subscribe("/bspline_traj",1,&drone_controller::traj_cb,this);
+        arrived_sub = nh.subscribe("/astar_node/target_arrived",1,&drone_controller::arrived_cb,this);
         arming_client = nh.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
         set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
         call_bs_client = nh.serviceClient<std_srvs::Trigger>("/call_bs");
@@ -45,6 +46,7 @@ namespace fsm_func
     }
     void drone_controller::pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     {
+        pos_drone_fcu_lst = pos_drone_fcu;
         pos_drone_fcu  = Eigen::Vector3d(msg->pose.position.x,msg->pose.position.y,msg->pose.position.z);
         // cout<<"----------------pose_cb---------------"<<"\n";
         // cout<<pos_drone_fcu<<endl;
@@ -77,6 +79,10 @@ namespace fsm_func
         // traj_saved = true;
         if(bs_replanned)
         {
+        double error_scale = sqrt(pow((msg->position[msg->position.size()-1].pose.position.x-pos_drone_fcu[0]),2)
+                                                           +pow((msg->position[msg->position.size()-1].pose.position.y-pos_drone_fcu[1]),2))
+                                                           +0.1;
+        cout<<"scallllllllllllllllllllllllle:"<<error_scale<<endl;
         for(int i = msg->position.size()-1;i>=0;i--)
         {
             double error;
@@ -87,7 +93,7 @@ namespace fsm_func
                 cout<<"near:" <<error<<endl;
                 break;
             }
-            else if(error<=0.143)
+            else if(error<=error_scale)
             {
                 cout<<"Exclude start."<<endl;
             }
@@ -101,6 +107,13 @@ namespace fsm_func
         bs_replanned = false;
         }
 
+    }
+    void drone_controller::arrived_cb(const std_msgs::Int32::ConstPtr & msg)
+    {
+        if(msg->data>0)
+            arrived = true;
+        else arrived = false;
+        cout<<"[Astar] arrived?"<<arrived<<arrived<<arrived<<arrived<<arrived<<endl;
     }
      /*-----------------RUN(ROS_SPIN)-----------------*/
     void drone_controller::run()
@@ -243,8 +256,22 @@ namespace fsm_func
             pos_ptr.pose.position.z = 0.8;
             _aim_ = pos_ptr;
             // ori
-            rl   = ptr(0) - pos_drone_fcu(0);
-            im = ptr(1) - pos_drone_fcu(1);
+            Eigen::Vector2d ptr_ = *(traj.begin()+1);
+            // ver3
+            rl = pos_drone_fcu(0) - pos_drone_fcu_lst(0);
+            im = pos_drone_fcu(1) - pos_drone_fcu_lst(1);
+            // ver1
+            // rl = ptr(0) - pos_drone_fcu(0);
+            // im = ptr(1) - pos_drone_fcu(1);
+            // ver2
+            // if(traj.size()==1){
+            // rl = ptr(0) - pos_drone_fcu(0);
+            // im = ptr(1) - pos_drone_fcu(1);
+            // }
+            // else{
+            // rl = ptr(0) - ptr_(0);
+            // im = ptr(1) - ptr_(1);
+            // }
             complex<double> cm(rl,im);  
             double arg_ = arg(cm);
             if(arg_<0) arg_ = arg_ + 2*PI;
@@ -255,16 +282,16 @@ namespace fsm_func
             geometry_msgs::Quaternion geo_q = tf::createQuaternionMsgFromYaw(arg_);
             _aim_.pose.orientation = geo_q;
         }
-        else if(error<0.1)
+        else
         {
             std_srvs::Trigger srv;
-        if (call_bs_client.call(srv)) 
-        {
-            bs_replanned = srv.response.success;
-            string message = srv.response.message;
-            reverse(message.begin(),message.end());
-            ROS_INFO("%s",message.c_str());
-        }
+            if (call_bs_client.call(srv)) 
+            {
+                bs_replanned = srv.response.success;
+                string message = srv.response.message;
+                // reverse(message.begin(),message.end());
+                ROS_INFO("%s",message.c_str());
+            }
         }
         rate.sleep();
         local_pos_pub.publish(_aim_);
