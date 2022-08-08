@@ -67,6 +67,8 @@ visualization_msgs/Marker.h
 -
 std_msgs/Int32.h
 -
+std_msgs/Bool.h
+-
 std_srvs/Trigger.h
 -
 Astar_searcher_2d.h
@@ -1163,6 +1165,22 @@ sensor_msgs/point_field_conversion.h
 -
 
 /opt/ros/melodic/include/sensor_msgs/point_field_conversion.h
+
+/opt/ros/melodic/include/std_msgs/Bool.h
+string
+-
+vector
+-
+map
+-
+ros/types.h
+-
+ros/serialization.h
+-
+ros/builtin_message_traits.h
+-
+ros/message_operations.h
+-
 
 /opt/ros/melodic/include/std_msgs/ColorRGBA.h
 string

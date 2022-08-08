@@ -669,9 +669,6 @@ namespace FLAG_Race
         //订阅路径
         path_suber = nh.subscribe<nav_msgs::Path>("/astar_node/grid_twist",1, &plan_manager::astar_subCallback,this);
 
-        // trigger
-        fsm_call = nh.advertiseService("/call_bs",&plan_manager::fsm_callback,this);
-
         //发布轨迹
         Traj_puber = nh.advertise<bspline_race::BsplineTraj>("/bspline_traj", 10);
 
@@ -740,13 +737,7 @@ namespace FLAG_Race
 
     }
 
-     bool plan_manager::fsm_callback(std_srvs::Trigger::Request & req,std_srvs::Trigger::Response & res)
-     {
-        res.success = true;
-        res.message = "Bspline replanning!";
-        cout<<"Now replan."<<endl;
-        get_fsm = true;
-     }
+
 
     void plan_manager::astar_subCallback(const nav_msgs::PathConstPtr &path)
     {
@@ -781,7 +772,7 @@ namespace FLAG_Race
 
         opt1.reset(new bspline_optimizer(astar_path_,Dim_,p_order_));
         u1.reset(new UniformBspline(p_order_,opt->cps_num_,Dim_,beta,initial_state,terminal_state));
-          if(get_map&&get_fsm)
+          if(get_map)
         {
             UniformBspline spline = *u;
             opt->setEsdfMap(esdf_map_) ;
@@ -892,7 +883,6 @@ namespace FLAG_Race
             //发布期望轨迹
             Traj_puber.publish(traj);
             // get_map = false;
-            get_fsm = false;
             }
 
 

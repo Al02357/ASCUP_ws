@@ -31,8 +31,8 @@ namespace fsm_func
         arrived_sub = nh.subscribe("/astar_node/target_arrived",1,&drone_controller::arrived_cb,this);
         arming_client = nh.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
         set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
-        call_bs_client = nh.serviceClient<std_srvs::Trigger>("/call_bs");
         local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
+        planning_pub = nh.advertise<std_msgs::Bool>("/planning_required",1);
     }
      /*-----------------CALL_BACK-----------------*/
     void drone_controller::joy_cb(const std_msgs::Int32::ConstPtr & msg)
@@ -108,11 +108,9 @@ namespace fsm_func
         }
 
     }
-    void drone_controller::arrived_cb(const std_msgs::Int32::ConstPtr & msg)
+    void drone_controller::arrived_cb(const std_msgs::Bool::ConstPtr & msg)
     {
-        if(msg->data>0)
-            arrived = true;
-        else arrived = false;
+        arrived = msg->data;
         cout<<"[Astar] arrived?"<<arrived<<arrived<<arrived<<arrived<<arrived<<endl;
     }
      /*-----------------RUN(ROS_SPIN)-----------------*/
@@ -136,11 +134,13 @@ namespace fsm_func
         {
             case Hold:
             {
+                ROS_WARN_DELAYED_THROTTLE(1,"Hold");
                 local_pos_pub.publish(_aim_);
                 break;
             }
              case Disarm:
             {
+                ROS_WARN_DELAYED_THROTTLE(1,"Disarm");
                 bool finish_flag = 0;
                 while(!finish_flag) finish_flag = hold();
                 finish_flag = 0;
@@ -150,6 +150,7 @@ namespace fsm_func
             }
              case Takeoff:
             {
+                ROS_WARN_DELAYED_THROTTLE(1,"Takeoff");
                 if(!aim_saved) 
                 {   
                     land_saved = false;
@@ -162,12 +163,13 @@ namespace fsm_func
                     _aim_.pose.orientation = geo_q;
                     aim_saved = true;
                 }
-                local_pos_pub.publish(_aim_);
                 takeoff();
+                local_pos_pub.publish(_aim_);
                 break;
             }
              case Land:
             {
+                ROS_WARN_DELAYED_THROTTLE(1,"Land");
                 if(!land_saved) 
                 {   
                     aim_saved = false;
@@ -182,6 +184,7 @@ namespace fsm_func
             }
              case Automatic:
             {
+                ROS_WARN_DELAYED_THROTTLE(1,"Automatic");
                 automatic();
                 break;
             }
@@ -223,24 +226,28 @@ namespace fsm_func
 
     void drone_controller::takeoff()
     {
-        if(!offboard())
+        if(offboard())
         {
-            if(!arm())
+            if(arm())
             {
                 cmd_code = Hold;
+                return;
             }
         } 
-        if(current_state.mode!="OFFBOARD") offboard();
-        bool finish_flag = 0;
-        if(!finish_flag) finish_flag = offboard();
-        finish_flag = 0;
-        while(!finish_flag) finish_flag = arm();
+        // if(current_state.mode!="OFFBOARD") offboard();
+        // cout<<"why3"<<endl;
+        // bool finish_flag = 0;
+        // if(!finish_flag) finish_flag = offboard();
+        // cout<<"why4"<<endl;
+        // finish_flag = 0;
+        // while(!finish_flag) finish_flag = arm();
+        // cout<<"why5"<<endl;
     }
 
     void drone_controller::automatic()
     {
-        ros::Rate rate(20.0);
-        double error = sqrt(pow((pos_drone_fcu(0)-_aim_.pose.position.x),2)+pow((pos_drone_fcu(1)-_aim_.pose.position.y),2));
+        ros::Rate rate(50.0);
+        std_msgs::Bool pl_msg;
          if(traj.size() != 0)
         {
             Eigen::Vector2d ptr;
@@ -281,19 +288,16 @@ namespace fsm_func
 
             geometry_msgs::Quaternion geo_q = tf::createQuaternionMsgFromYaw(arg_);
             _aim_.pose.orientation = geo_q;
+            pl_msg.data = false;
+            planning_pub.publish(pl_msg);
         }
         else
         {
-            std_srvs::Trigger srv;
-            if (call_bs_client.call(srv)) 
-            {
-                bs_replanned = srv.response.success;
-                string message = srv.response.message;
-                // reverse(message.begin(),message.end());
-                ROS_INFO("%s",message.c_str());
-            }
+            pl_msg.data = true;
+            planning_pub.publish(pl_msg);
+            bs_replanned = true;
         }
-        rate.sleep();
+        // rate.sleep();
         local_pos_pub.publish(_aim_);
     }
  
@@ -310,8 +314,10 @@ namespace fsm_func
                 cout<<"[FSM] Mode "<<mode.request.custom_mode<< " enabled."<<endl;
                 return_flag = true;
             }
-            last_request = ros::Time::now();
+        last_request = ros::Time::now();
         }
+        if(current_state.mode == mode.request.custom_mode) return_flag = true;
+        
         return return_flag;
     }
     bool drone_controller::set_command( mavros_msgs::CommandBool cmd,double durantion )
@@ -330,6 +336,8 @@ namespace fsm_func
                 }
                 last_request = ros::Time::now();
             }
+            if(current_state.armed == cmd.request.value) return_flag = true;
+            
             return return_flag;
     }
 

@@ -19,6 +19,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Bool.h>
 #include <std_srvs/Trigger.h>
 #include "Astar_searcher_2d.h"
 // #include "JPS_searcher.h"
@@ -39,6 +40,7 @@ double _x_size, _y_size;
 
 bool _has_map   = false;
 bool _has_target   = false;
+bool plan_required = false;
 Vector2d _start_pt;
 Vector2d _target_pt;
 double actual_height = 0.0;
@@ -47,7 +49,10 @@ Vector2d _map_lower, _map_upper;
 int _max_x_id, _max_y_id;
 /*----------------------ROS----------------------*/
 // SubPub
-ros::Subscriber _map_sub, _pts_sub,_nav_sub;//读地图与目标点
+ros::Subscriber _map_sub,
+                                 _pts_sub,
+                                 _nav_sub,
+                                 _plan_sub;//读地图与目标点
 ros::Publisher  _grid_path_vis_pub, 
                                _visited_nodes_vis_pub,
                                _grid_map_vis_pub,
@@ -139,24 +144,24 @@ void rcvPointCloudCallBack(const sensor_msgs::PointCloud2::ConstPtr & pointcloud
     _has_map = true;
     cout<<"[Astar] Pointcloud received."<<endl;
     std_msgs::Int32 arr_msg;
-    if(!_has_target)
+    if(!_has_target || !plan_required)
     {
-        ROS_WARN("[Astar] No target!");
+        ROS_WARN_DELAYED_THROTTLE(1,"[Astar] No target!");
     }else  {
-        if(_astar_path_finder -> getData(_target_pt)) ROS_ERROR("[Astar] _target_pt is Occupied! PathFinding will not run!");
+        if(_astar_path_finder -> getData(_target_pt)) ROS_ERROR_DELAYED_THROTTLE(2,"[Astar] _target_pt is Occupied! PathFinding will not run!");
         else if(_astar_path_finder->arrived(_start_pt,_target_pt)) 
         {
-            ROS_WARN("[Astar] Arrived! PathFinding will not run!");
+            ROS_WARN_DELAYED_THROTTLE(1,"[Astar] Arrived! PathFinding will not run!");
             arr_msg.data = 1;
             _arrived_pub.publish(arr_msg);
         }
         else {
         if(_astar_path_finder->getData(_start_pt)) 
         {
-            ROS_WARN("[Astar] _start_pt is Occupied! Reset Obs. BE CAREFUL!");
+            ROS_WARN_DELAYED_THROTTLE(1,"[Astar] _start_pt is Occupied! Reset Obs. BE CAREFUL!");
             _astar_path_finder -> cleanStartObs(_start_pt);
         }
-        if(!pathFinding(_start_pt, _target_pt)) ROS_ERROR("[Astar] No path provide!"); 
+        if(!pathFinding(_start_pt, _target_pt)) ROS_ERROR_DELAYED_THROTTLE(2,"[Astar] No path provide!"); 
         else{
             arr_msg.data = -1;
             _arrived_pub.publish(arr_msg);
@@ -189,6 +194,11 @@ void simPoseCallback(const geometry_msgs::PoseStamped & msg)
     _start_pt(1) = msg.pose.position.y;
     actual_height = msg.pose.position.z;
     // ROS_WARN("GET POSE");
+}
+
+void planCallback(const std_msgs::Bool::ConstPtr & msg)
+{
+    plan_required = msg->data;
 }
 
 bool pathFinding(const Vector2d start_pt, const Vector2d target_pt)
@@ -224,6 +234,7 @@ int main(int argc, char** argv)
     _map_sub  = nh.subscribe( "map",  10, rcvPointCloudCallBack );
     _pts_sub     = nh.subscribe( "waypoints", 10, rcvWaypointsCallback );   
     _nav_sub    = nh.subscribe( "pose", 10, simPoseCallback );
+    _plan_sub  = nh.subscribe("/planning_required",1,planCallback);
 //pub
     _grid_map_vis_pub             = nh.advertise<sensor_msgs::PointCloud2>("grid_map_vis", 1);
     _grid_path_vis_pub            = nh.advertise<visualization_msgs::Marker>("grid_path_vis", 1);

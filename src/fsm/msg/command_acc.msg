@@ -23,6 +23,7 @@ uint32 comid
 uint8 command
 uint8 sub_mode
 uint8 ready
+uint8 cmdd
 float32[3] pos_sp      ## [m]
 float32[3] vel_sp      ## [m/s]
 float32[3] acc_sp

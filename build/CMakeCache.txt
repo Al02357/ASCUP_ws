@@ -1154,6 +1154,12 @@ grid_path_searcher_BINARY_DIR:STATIC=/home/flag/FLAG_ws/build/grid_path_searcher
 grid_path_searcher_SOURCE_DIR:STATIC=/home/flag/FLAG_ws/src/grid_path_searcher
 
 //Value Computed by CMake
+grid_path_searcher_multi_target_BINARY_DIR:STATIC=/home/flag/FLAG_ws/build/grid_path_searcher_multi_target
+
+//Value Computed by CMake
+grid_path_searcher_multi_target_SOURCE_DIR:STATIC=/home/flag/FLAG_ws/src/grid_path_searcher_multi_target
+
+//Value Computed by CMake
 gtest_BINARY_DIR:STATIC=/home/flag/FLAG_ws/build/gtest/googlemock/gtest
 
 //Dependencies for the target

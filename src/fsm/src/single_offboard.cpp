@@ -26,7 +26,7 @@
 #include <std_msgs/Float64MultiArray.h>
 #include <fsm/command_acc.h>
 #include <bspline_race/bspline_race.h>
-#include <complex.h>
+#include <std_msgs/Bool.h>
 using namespace std;
 
 static mavros_msgs::State current_state;
@@ -45,14 +45,23 @@ Eigen::Vector3d pos_drone_fcu;
 Eigen::Vector3d pos_drone_now;
 Eigen::Vector2d yaw_drone_fcu;
 
+// TODO
+#define PI acos(-1)
+bool bs_replanned = true;
+bool arrived = false;
+Eigen::Vector3d pos_drone_fcu_lst;
+vector<Eigen::Vector2d> traj;
+geometry_msgs::PoseStamped _aim_;
+
+
 
 /*----------ASCUP----------*/
 static int flag_A = 0;                              // 0: disable mission A debug       1: enable mission A debug
 static int flag_B = 0;                              // 0: disable mission B debug       1: enable mission B debug
 static int flag_C = 0;                              // 0: disable mission C debug       1: enable mission C debug
-static int flag_D = 0;                              // 0: disable mission D debug       1: enable mission D debug
+static int flag_D = 1;                              // 0: disable mission D debug       1: enable mission D debug
 static int flag_E = 0;                              // 0: disable mission E debug       1: enable mission E debug
-static int flag_LAND = 1;                           // 0: disable mission land debug    1: enable mission land debug  
+static int flag_LAND = 0;                           // 0: disable mission land debug    1: enable mission land debug  
 
 int flag_a = 0;                           /* 0: start state
                                              1: arrive point 1 (find bounding box)
@@ -73,23 +82,30 @@ int count_tag = 0;
 Eigen::Vector3d pos_tag;
 Eigen::Vector3d pos_land;                
 
-static int flag_ring1 = 2;
+static int flag_ring1 = 0;                //修改，原来为2
 static int flag_ring2 = 0;
 static int flag_ring3 = 0;
 static int flag_ring4 = 0;
 
+float lamda = 1.0;
+
 int flag_ring_recog = 0;
 int count_ring1 = 0;
-int count_bs = 0;
-bool jam = 0;
+Eigen::Vector3d ring_point1;
+Eigen::Vector3d ring_point2;
+Eigen::Vector3d ring_point1_temp;
+Eigen::Vector3d ring_point2_temp;
+Eigen::Vector3d ring_center_temp;
+Eigen::Vector3d ring_direct_temp;
 Eigen::Vector3d ring_center;                                //center point from ring recognition
 Eigen::Vector3d ring_direct;                                //normal vector from ring recognition
 Eigen::Vector3d ring_before;                                //point before going through ring      
 Eigen::Vector3d ring_after;                                 //point after going through ring    
 Eigen::Vector2d ring_orientation;                           //yaw orientation to go through ring
 
+Eigen::Vector3d BT_wp;
+
 bspline_race::BsplineTraj traj_fsm;
-vector<Eigen::Vector2d> traj;
 // geometry_msgs::PoseStamped[] traj_pos;
 // geometry_msgs::PoseStamped[] traj_vel;
 // geometry_msgs::PoseStamped[] traj_acc;
@@ -114,8 +130,12 @@ void box_cb(const std_msgs::Float64MultiArray::ConstPtr& msg)
 
 void ring_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
-    ring_center = Eigen::Vector3d(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
-    ring_direct = Eigen::Vector3d(msg->pose.orientation.z, -msg->pose.orientation.x, -msg->pose.orientation.y);
+//     ring_center = Eigen::Vector3d(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
+//     ring_direct = Eigen::Vector3d(msg->pose.orientation.z, -msg->pose.orientation.x, -msg->pose.orientation.y);
+
+    ring_center_temp = Eigen::Vector3d(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
+    ring_direct_temp = Eigen::Vector3d(msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z);
+    
     flag_ring_recog = 1;
 }
 
@@ -125,73 +145,45 @@ void tag_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     flag_tag_recog = 1;
 }
 
-void traj_cb(const bspline_race::BsplineTraj::ConstPtr& msg)
-{
-    jam= 1;
-    // count_bs++;
-    // if(flag_new_traj == 1) 
-    // {
-        // traj_fsm = *(msg);
-        
-        // traj_fsm.position = msg->velocity;
-        // traj_acc = msg->acceleration;
-        int iter;
-        for(int i = 0;i<msg->position.size();i++)
+void traj_cb(const bspline_race::BsplineTraj::ConstPtr & msg)
+    {
+        if(bs_replanned)
+        {
+        double error_scale = sqrt(pow((msg->position[msg->position.size()-1].pose.position.x-pos_drone_fcu[0]),2)
+                                                           +pow((msg->position[msg->position.size()-1].pose.position.y-pos_drone_fcu[1]),2))
+                                                           +0.1;
+        // cout<<"scallllllllllllllllllllllllle:"<<error_scale<<endl;
+        for(int i = msg->position.size()-1;i>=0;i--)
         {
             double error;
             error = sqrt(pow((msg->position[i].pose.position.x-pos_drone_fcu[0]),2)+pow((msg->position[i].pose.position.y-pos_drone_fcu[1]),2));
-            if(error<=0.05)
+            if(error>1.5)
             {
-                iter = i;
-                cout<<"near:" <<error<<endl;
+                // cout<<"final pos: "<<msg->position[i].pose.position.x<<" , "<<msg->position[i].pose.position.y<<endl;
+                // cout<<"near:" <<error<<endl;
                 break;
-                
             }
-            else{
+            else if(error<=error_scale)
+            {
+                // cout<<"Exclude start."<<endl;
+            }
+            else
+            {
                 Eigen::Vector2d ptr;
                 ptr << msg->position[i].pose.position.x,msg->position[i].pose.position.y;
-                cout<<"get i = "<<i<<"with error: "<<error<<endl;
                 traj.push_back(ptr);
             }
         }
-        
+        bs_replanned = false;
+        }
 
-        // geometry_msgs::PoseStamped ptr;
-        // auto iter_ = traj_fsm.position.begin();
-        // for(auto iter = traj_fsm.position.begin();iter!=traj_fsm.position.end();iter++)
-        // {
-        //     ptr = *(iter);
-        //     double error;
-        //     error = sqrt(pow((ptr.pose.position.x-pos_drone_fcu[0]),2)+pow((ptr.pose.position.y-pos_drone_fcu[1]),2));
-        //     if(error<=0.05)
-        //     {
-        //         iter_ = iter;
-        //         break;
-        //     }
-        // }
-        // if(iter_!=traj_fsm.position.end()-1){
-        //     for(auto iter = iter_;iter!=traj_fsm.position.end();iter++)
-        //     {
-        //         traj_fsm.position.erase(iter);
-        //     }
-        // }
-        
-
-
-        traj_len = msg->position.size();
-        cout<< "~~~~~~~~~~~~~traj_len: "<<traj_len<<"    ~~~~~~~~~~~~~~~~~~~~~~~"<<endl;
-        traj_p =  iter - 1;                                                //???
-         traj_len = traj.size();
-        cout<< "~~~~~~~~~~~~~traj_len: "<<traj_len<<"    ~~~~~~~~~~~~~~~~~~~~~~~"<<endl;
-    // }
-
-    // flag_new_traj = 0;
-    // if(count_bs == 60){
-    //     count_bs = 0;
-    //     flag_new_traj = 1;
-    // }
-    jam = 0;
-}
+    }
+void arrived_cb(const std_msgs::Bool::ConstPtr & msg)
+    {
+        arrived = msg->data;
+        cout<<"[Astar] arrived?"<<arrived<<arrived<<arrived<<arrived<<arrived<<endl;
+    }
+ 
 
 /*-------------------------*/
 
@@ -205,8 +197,18 @@ void vtg_cb(const sensor_msgs::BatteryState::ConstPtr &msg)
 void ready_cb(const fsm::command_acc &msg)
 { 
     ready_fly=msg.ready;
+    //ROS_ERROR("11111111");
+    //cout<<"222";
+}
+
+void BT_wp_cb(const fsm::command_acc &msg)
+{ 
+    BT_wp[0]=msg.pos_sp[0];
+    BT_wp[1]=msg.pos_sp[1];
+    BT_wp[2]=msg.pos_sp[2];
+    ROS_INFO("BT: %.3lf, %.3lf, %.3lf",BT_wp[0],BT_wp[1],BT_wp[2]);
     //ROS_ERROR("11111111");voltage_now
-    //cout<<"1111";
+    ROS_ERROR("222222");
 }
 
 void state_cb(const mavros_msgs::State::ConstPtr& msg)
@@ -216,6 +218,7 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg)
 
 void pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
+    pos_drone_fcu_lst = pos_drone_fcu;
     pos_drone_fcu = Eigen::Vector3d(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
     yaw_drone_fcu = Eigen::Vector2d(msg->pose.orientation.x, msg->pose.orientation.w);
 }
@@ -282,12 +285,8 @@ void UdpListen(const uint16_t cport)
           aim.pose.position.x=px;
           aim.pose.position.y=py;
           aim.pose.position.z=pz;
-                    complex<double> cm(0.0,-1);  
-                    double arg_ = arg(cm);
-                    geometry_msgs::Quaternion geo_q = tf::createQuaternionMsgFromYaw(arg_);
-                    aim.pose.orientation = geo_q;
         }
-        ROS_INFO("Rec: %d, %.3lf, %.3lf, %.3lf",cmd,aim.pose.position.x,aim.pose.position.y,aim.pose.position.z);
+//        ROS_INFO("Rec: %d, %.3lf, %.3lf, %.3lf",cmd,aim.pose.position.x,aim.pose.position.y,aim.pose.position.z);
         if(flag2==0)
         cmdd=cmd;
          switch (cmdd)
@@ -298,7 +297,7 @@ void UdpListen(const uint16_t cport)
             else
             ROS_INFO("Waiting");
             break;
-            
+/*            
         case 1:
             if(pos_drone_fcu[2]>1.5||voltage_now<13.5)
             {
@@ -313,13 +312,14 @@ void UdpListen(const uint16_t cport)
             flag2=1;
             }
             break;
-            
+*/            
         }
         //   cout<<voltage_now<<endl;
         //    cout<<pos_drone_fcu[2]<<endl;
     }
 
 }
+
 
 
 
@@ -333,6 +333,7 @@ int main(int argc, char **argv)
     ros::Subscriber position_sub = nh.subscribe<geometry_msgs::PoseStamped>
             ("/mavros/local_position/pose", 100, pos_cb);
     ros::Subscriber ready= nh.subscribe("/px4/ready",10,ready_cb);
+    ros::Subscriber bt_wp= nh.subscribe("/bt/waypoint",100,BT_wp_cb);           //BT Tree waypoint
     ros::Subscriber voltage_sub = nh.subscribe<sensor_msgs::BatteryState>
             ("/mavros/battery", 300, vtg_cb);
 
@@ -340,14 +341,16 @@ int main(int argc, char **argv)
     ros::Subscriber box_sub = nh.subscribe<std_msgs::Float64MultiArray>
             ("/task_A_msgs", 100, box_cb);
     ros::Subscriber ring_sub = nh.subscribe<geometry_msgs::PoseStamped>
-            ("/orb_pose", 100, ring_cb);
+            ("/circle_pose", 100, ring_cb);
     ros::Subscriber tag_sub = nh.subscribe<geometry_msgs::PoseStamped>
             ("/apriltag_ros_continuous_node/apriltag_pose", 100, tag_cb);
-    ros::Subscriber traj_sub = nh.subscribe<bspline_race::BsplineTraj>
+    ros::Subscriber traj_sub = nh.subscribe<bspline_race::BsplineTraj>       //路径规划，接收B样条的点
             ("/bspline_traj", 10 ,traj_cb);
 
-    ros::Publisher traj_goal_pub = nh.advertise<geometry_msgs::PoseStamped>
+    ros::Publisher traj_goal_pub = nh.advertise<geometry_msgs::PoseStamped>  //路径规划，发送目标点
             ("/move_base_simple/goal", 100);
+
+    ros::Publisher planning_pub = nh.advertise<std_msgs::Bool>("/planning_required",1);
     
     /*-------------------------------*/
 
@@ -365,11 +368,7 @@ int main(int argc, char **argv)
     nh.param("/single_offboard/way_num",waypoint_num,0);
     aim.pose.position.x = 0;
     aim.pose.position.y = 0;
-    aim.pose.position.z = 0.3;
-                    complex<double> cm(0.0,-1);  
-                    double arg_ = arg(cm);
-                    geometry_msgs::Quaternion geo_q = tf::createQuaternionMsgFromYaw(arg_);
-                    aim.pose.orientation = geo_q;
+    aim.pose.position.z = 1.0;
     //point
     for (int i = 1; i <= waypoint_num; i++)
     {
@@ -382,10 +381,12 @@ int main(int argc, char **argv)
 //    nh.param("/single_offboard/waypoint1_z",aim.pose.position.z,3.0);
     new std::thread(&UdpListen,12001);
     // wait for FCU connection
+/*
     while(ros::ok() && !current_state.connected){
         ros::spinOnce();
         rate.sleep();
     }
+*/
     sensor_msgs::BatteryState voltage_now;
     
     mavros_msgs::SetMode offb_set_mode;
@@ -430,31 +431,24 @@ int main(int argc, char **argv)
         {
             if( current_state.mode != "OFFBOARD" &&
                 (ros::Time::now() - last_request > ros::Duration(5.0))){
-                if( set_mode_client.call(offb_set_mode) &&
-                    offb_set_mode.response.mode_sent){
-                    ROS_ERROR("Offboard enabled");
-                }
+                
                 last_request = ros::Time::now();
             }
+            local_pos_pub.publish(aim);
         }
         if(cmdd==2)
         {
-            if( current_state.mode != "OFFBOARD" &&
-                (ros::Time::now() - last_request > ros::Duration(3.0))){
-                if( set_mode_client.call(offb_set_mode) &&
-                    offb_set_mode.response.mode_sent){
-                    ROS_ERROR("Offboard enabled");
-                }
-                last_request = ros::Time::now();
-            }else if( !current_state.armed &&
-                (ros::Time::now() - last_request > ros::Duration(3.0))){
+            if( !current_state.armed &&
+                (ros::Time::now() - last_request > ros::Duration(5.0)))
+            {
                 if( arming_client.call(arm_cmd) &&
-                    arm_cmd.response.success){
+                    arm_cmd.response.success)
+                {
                     ROS_ERROR("Vehicle armed");
                 }
                 last_request = ros::Time::now();
             }
-            local_pos_pub.publish(aim);
+            
         }
         
         if(cmdd==9)
@@ -480,6 +474,7 @@ int main(int argc, char **argv)
                 last_request = ros::Time::now();
             }
                   ROS_ERROR("Vehicle armed");
+            local_pos_pub.publish(aim);
         }
         
         if(cmdd == 4)
@@ -614,7 +609,7 @@ int main(int argc, char **argv)
                         else
                         {
                             aim.pose.position.x = box_midpoint[0];
-                            aim.pose.position.y = box_midpoint[1] + 7.0;      
+                            aim.pose.position.y = box_midpoint[1];      
                             aim.pose.position.z = box_midpoint[2];
                             aim.pose.orientation.x = 1.0;
                             aim.pose.orientation.y = 0.0;
@@ -648,7 +643,7 @@ int main(int argc, char **argv)
                 if(flag_ring1 == 0)
                 {
                     /*----------check ring detection----------*/
-                    if(count_ring1 < 10)
+                    if(count_ring1 <5)
                     {
                         if(flag_ring_recog == 1)
                         {
@@ -661,23 +656,39 @@ int main(int argc, char **argv)
                         local_pos_pub.publish(aim);
                     }
                     /*----------determine point before and after ring----------*/
-                    else if(count_ring1 == 10)
+                    else if(count_ring1 == 5)
                     {
                         count_ring1 = count_ring1 + 1;
 
-                        ring_before = Eigen::Vector3d(pos_drone_fcu[0] + ring_center[0] - ring_direct[0]*1.0, 
-                                                    pos_drone_fcu[1] + ring_center[1] - ring_direct[1]*1.0, 
-                                                    pos_drone_fcu[2] + ring_center[2]);
-                        ring_after = Eigen::Vector3d(pos_drone_fcu[0] + ring_center[0] + ring_direct[0]*1.0, 
-                                                    pos_drone_fcu[1] + ring_center[1] + ring_direct[1]*1.0, 
-                                                    pos_drone_fcu[2] + ring_center[2]);                         
+                        // ring_before = Eigen::Vector3d(pos_drone_fcu[0] + ring_center[0] - ring_direct[0]*1.0, 
+                        //                             pos_drone_fcu[1] + ring_center[1] - ring_direct[1]*1.0, 
+                        //                             pos_drone_fcu[2] + ring_center[2]);
+                        // ring_after = Eigen::Vector3d(pos_drone_fcu[0] + ring_center[0] + ring_direct[0]*1.0, 
+                        //                             pos_drone_fcu[1] + ring_center[1] + ring_direct[1]*1.0, 
+                        //                             pos_drone_fcu[2] + ring_center[2]);       
+                       
+                        ring_point1_temp = ring_center_temp - lamda * ring_direct_temp;
+                        ring_point2_temp = ring_center_temp + lamda * ring_direct_temp;
+ 
+                        // position in body                                                                                                                
+                        ring_point1 = Eigen::Vector3d(ring_point1_temp[2], -ring_point1_temp[0], -ring_point1_temp[1]);
+                        ring_point2 = Eigen::Vector3d(ring_point2_temp[2], -ring_point2_temp[0], -ring_point2_temp[1]);
+
+                        //ring_point1 equal 0
+                        ring_before = Eigen::Vector3d(pos_drone_fcu[0] + ring_point1[0], 
+                                                    pos_drone_fcu[1] + ring_point1[1], 
+                                                    pos_drone_fcu[2] + ring_point1[2]);
+                        ring_after = Eigen::Vector3d(pos_drone_fcu[0] + ring_point2[0], 
+                                                    pos_drone_fcu[1] + ring_point2[1], 
+                                                    pos_drone_fcu[2] + ring_point2[2]);                                          
                         aim.pose.position.x = ring_before[0];
                         aim.pose.position.y = ring_before[1];      
                         aim.pose.position.z = ring_before[2];
                         local_pos_pub.publish(aim);
+ROS_INFO("Rec: %d, %.3lf, %.3lf, %.3lf",cmdd,aim.pose.position.x,aim.pose.position.y,aim.pose.position.z);
                     }
                     /*----------fly towards point before ring----------*/
-                    else if(count_ring1 == 11)
+                    else if(count_ring1 == 6)
                     {
                         aim.pose.position.x = ring_before[0];
                         aim.pose.position.y = ring_before[1];      
@@ -802,63 +813,47 @@ int main(int argc, char **argv)
 
         if(cmdd == 8)
         {
-            
-        //    if(flag_new_traj == 1)
-        //    {
-        //        traj_p = 0;
-        //        flag_new_traj = 0;
-        //    }
-            // goal.pose.position.x = 1.0;
-            // goal.pose.position.y = -5.0;
-            // goal.pose.position.z = 0.3;
-            // //    cout<<"fuck"<<endl;
-            // traj_goal_pub.publish(goal);
-            ros::Time time_1 = ros::Time::now();    
-            // cout<<"flag_new_traj="<<flag_new_traj<<endl;
-            // if(flag_new_traj == 0)
-            // {
-                if(jam == 1) 
-                {
-                    local_pos_pub.publish(aim);
-                }
-                else{
-                if((traj.end()-1) != traj.begin())
-                {
-                    Eigen::Vector2d ptr;
-                    ptr = *(traj.end()-1);
-                    traj.pop_back();
-                    // double x = goal.pose.position.x-pos_drone_fcu[0];
-                    // double y = goal.pose.position.y-pos_drone_fcu[1];
-                    double x = ptr(0)-pos_drone_fcu[0];
-                    double y = ptr(1)-pos_drone_fcu[1];
-                    // double x = traj_fsm.position[traj_p].pose.position.x-aim.pose.position.x;
-                    // double y = traj_fsm.position[traj_p].pose.position.y-aim.pose.position.y;
-                    // double x = traj_fsm.velocity[traj_p].pose.position.x;
-                    // double y = traj_fsm.velocity[traj_p].pose.position.y;
-                    complex<double> cm(x,y);  
-                    double arg_ = arg(cm);
-                    geometry_msgs::Quaternion geo_q = tf::createQuaternionMsgFromYaw(arg_);
-                    aim.pose.position.x = traj_fsm.position[traj_p].pose.position.x;
-                    aim.pose.position.y = traj_fsm.position[traj_p].pose.position.y;
-                    aim.pose.position.z = 0.3;
-                    aim.pose.orientation = geo_q;
-                    
-                    
-                    local_pos_pub.publish(aim);
-                    // rate.sleep();
-                    traj_p = traj_p - 1;
-                }
-                else
-                {
-                    local_pos_pub.publish(aim);
-                }
-                }
-                cout<<aim.pose.position.x<<"    "<<aim.pose.position.y<<"    "<<aim.pose.position.z<<endl;
-                
-            // }    
+            int k = 0;
+        std_msgs::Bool pl_msg;
+        cout<<k++<<endl;
+         if(traj.size() != 0)
+        {
+            cout<<k++<<endl;
+            Eigen::Vector2d ptr;
+            ptr = *(traj.begin());
+            traj.erase(traj.begin());
+            double rl,im;
+            geometry_msgs::PoseStamped pos_ptr;
+            // pos
+            pos_ptr.pose.position.x = ptr(0);
+            pos_ptr.pose.position.y = ptr(1);
+            pos_ptr.pose.position.z = 0.8;
+            _aim_ = pos_ptr;
+            // ori
+            Eigen::Vector2d ptr_ = *(traj.begin()+1);
+            // ver3
+            rl = pos_drone_fcu(0) - pos_drone_fcu_lst(0);
+            im = pos_drone_fcu(1) - pos_drone_fcu_lst(1);
+            complex<double> cm(rl,im);  
+            double arg_ = arg(cm);
+            if(arg_<0) arg_ = arg_ + 2*PI;
 
+            geometry_msgs::Quaternion geo_q = tf::createQuaternionMsgFromYaw(arg_);
+            _aim_.pose.orientation = geo_q;
+            pl_msg.data = false;
+            planning_pub.publish(pl_msg);
         }
-
+        else
+        {
+            cout<<k++<<endl;
+            pl_msg.data = true;
+            planning_pub.publish(pl_msg);
+            bs_replanned = true;
+        }
+        // rate.sleep();
+        cout<<k++<<endl;
+        local_pos_pub.publish(_aim_);
+    }
 
 
         ros::spinOnce();
