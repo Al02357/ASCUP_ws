@@ -157,7 +157,7 @@ void traj_cb(const bspline_race::BsplineTraj::ConstPtr & msg)
         {
             double error;
             error = sqrt(pow((msg->position[i].pose.position.x-pos_drone_fcu[0]),2)+pow((msg->position[i].pose.position.y-pos_drone_fcu[1]),2));
-            if(error>1.5)
+            if(error>3)
             {
                 // cout<<"final pos: "<<msg->position[i].pose.position.x<<" , "<<msg->position[i].pose.position.y<<endl;
                 // cout<<"near:" <<error<<endl;
