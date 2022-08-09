@@ -55,10 +55,10 @@ add_executable ( astar_node
 target_link_libraries(astar_node
     ${catkin_LIBRARIES}
     ${PCL_LIBRARIES} )
-    add_executable ( test 
+    add_executable ( test_
     src/test.cpp 
     )
-target_link_libraries(test
+target_link_libraries(test_
     ${catkin_LIBRARIES}
     ${PCL_LIBRARIES} )
 

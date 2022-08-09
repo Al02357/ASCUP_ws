@@ -243,7 +243,7 @@ int main(int argc, char **argv){
 //    nh.param("/swarm_cmd/aim_pose_position_z",aim.pose.position.z,1.0);
     aim.pose.position.y = 0;
     aim.pose.position.x = 0;
-    aim.pose.position.z = 1.0;
+    aim.pose.position.z = 0.8;
 
     aim.pose.orientation.x = 0;
 

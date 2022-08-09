@@ -178,6 +178,13 @@ bool AstarPathFinder2d::arrived(const Eigen::Vector2d & pt1,const Eigen::Vector2
     else return false;
 }
 
+bool AstarPathFinder2d::arrived_approx(const Eigen::Vector2d & pt1,const Eigen::Vector2d & pt2)
+{
+    Vector2i pt_1 = coord2gridIndex(pt1);
+    Vector2i pt_2 = coord2gridIndex(pt2);
+    if(abs(pt_1(0) - pt_2(0))<=1 && abs(pt_1(1) - pt_2(1))<=1) return true;
+    else return false;
+}
 //TODO 
 //AstarGetSucc函数
 // 获取该点周围的所有节点和周围点的edgeCostSets(edgeCostSets:该点到目标的的距离)

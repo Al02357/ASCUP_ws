@@ -114,6 +114,17 @@ install/local/fast: preinstall/fast
 	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
+# Special rule for the target test
+test:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
+	/usr/bin/ctest --force-new-ctest-process $(ARGS)
+.PHONY : test
+
+# Special rule for the target test
+test/fast: test
+
+.PHONY : test/fast
+
 # Special rule for the target list_install_components
 list_install_components:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
@@ -157,19 +168,19 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-grid_path_searcher/CMakeFiles/test.dir/rule:
-	cd /home/flag/FLAG_ws/build && $(MAKE) -f CMakeFiles/Makefile2 grid_path_searcher/CMakeFiles/test.dir/rule
-.PHONY : grid_path_searcher/CMakeFiles/test.dir/rule
+grid_path_searcher/CMakeFiles/test_.dir/rule:
+	cd /home/flag/FLAG_ws/build && $(MAKE) -f CMakeFiles/Makefile2 grid_path_searcher/CMakeFiles/test_.dir/rule
+.PHONY : grid_path_searcher/CMakeFiles/test_.dir/rule
 
 # Convenience name for target.
-test: grid_path_searcher/CMakeFiles/test.dir/rule
+test_: grid_path_searcher/CMakeFiles/test_.dir/rule
 
-.PHONY : test
+.PHONY : test_
 
 # fast build rule for target.
-test/fast:
-	cd /home/flag/FLAG_ws/build && $(MAKE) -f grid_path_searcher/CMakeFiles/test.dir/build.make grid_path_searcher/CMakeFiles/test.dir/build
-.PHONY : test/fast
+test_/fast:
+	cd /home/flag/FLAG_ws/build && $(MAKE) -f grid_path_searcher/CMakeFiles/test_.dir/build.make grid_path_searcher/CMakeFiles/test_.dir/build
+.PHONY : test_/fast
 
 # Convenience name for target.
 grid_path_searcher/CMakeFiles/nav_msgs_generate_messages_eus.dir/rule:
@@ -321,7 +332,7 @@ src/test.o: src/test.cpp.o
 
 # target to build an object file
 src/test.cpp.o:
-	cd /home/flag/FLAG_ws/build && $(MAKE) -f grid_path_searcher/CMakeFiles/test.dir/build.make grid_path_searcher/CMakeFiles/test.dir/src/test.cpp.o
+	cd /home/flag/FLAG_ws/build && $(MAKE) -f grid_path_searcher/CMakeFiles/test_.dir/build.make grid_path_searcher/CMakeFiles/test_.dir/src/test.cpp.o
 .PHONY : src/test.cpp.o
 
 src/test.i: src/test.cpp.i
@@ -330,7 +341,7 @@ src/test.i: src/test.cpp.i
 
 # target to preprocess a source file
 src/test.cpp.i:
-	cd /home/flag/FLAG_ws/build && $(MAKE) -f grid_path_searcher/CMakeFiles/test.dir/build.make grid_path_searcher/CMakeFiles/test.dir/src/test.cpp.i
+	cd /home/flag/FLAG_ws/build && $(MAKE) -f grid_path_searcher/CMakeFiles/test_.dir/build.make grid_path_searcher/CMakeFiles/test_.dir/src/test.cpp.i
 .PHONY : src/test.cpp.i
 
 src/test.s: src/test.cpp.s
@@ -339,7 +350,7 @@ src/test.s: src/test.cpp.s
 
 # target to generate assembly for a file
 src/test.cpp.s:
-	cd /home/flag/FLAG_ws/build && $(MAKE) -f grid_path_searcher/CMakeFiles/test.dir/build.make grid_path_searcher/CMakeFiles/test.dir/src/test.cpp.s
+	cd /home/flag/FLAG_ws/build && $(MAKE) -f grid_path_searcher/CMakeFiles/test_.dir/build.make grid_path_searcher/CMakeFiles/test_.dir/src/test.cpp.s
 .PHONY : src/test.cpp.s
 
 # Help Target
@@ -354,6 +365,7 @@ help:
 	@echo "... edit_cache"
 	@echo "... install/local"
 	@echo "... test"
+	@echo "... test_"
 	@echo "... nav_msgs_generate_messages_eus"
 	@echo "... list_install_components"
 	@echo "... nav_msgs_generate_messages_nodejs"

@@ -8,7 +8,6 @@ Panels:
         - /Marker2
         - /Marker2/Namespaces1
         - /Marker4
-        - /Path3
       Splitter Ratio: 0.5
     Tree Height: 231
   - Class: rviz/Selection
@@ -98,7 +97,7 @@ Visualization Manager:
       Buffer Length: 1
       Class: rviz/Path
       Color: 204; 0; 0
-      Enabled: false
+      Enabled: true
       Head Diameter: 0.30000001192092896
       Head Length: 0.20000000298023224
       Length: 0.30000001192092896
@@ -108,7 +107,7 @@ Visualization Manager:
       Offset:
         X: 0
         Y: 0
-        Z: 0.6000000238418579
+        Z: 1
       Pose Color: 255; 85; 255
       Pose Style: None
       Radius: 0.029999999329447746
@@ -116,7 +115,7 @@ Visualization Manager:
       Shaft Length: 0.10000000149011612
       Topic: /astar_node/grid_twist
       Unreliable: false
-      Value: false
+      Value: true
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
@@ -141,13 +140,13 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Class: rviz/Marker
-      Enabled: true
+      Enabled: false
       Marker Topic: /astar_node/grid_path_vis
       Name: Marker
       Namespaces:
-        demo_node/astar_path: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: false
       Marker Topic: /astar_node/visited_nodes_vis
@@ -307,25 +306,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 10.885733604431152
+      Distance: 12.192021369934082
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 4.536377906799316
-        Y: -4.102661609649658
-        Z: -1.9966092109680176
+        X: -2.2734553813934326
+        Y: -0.350595623254776
+        Z: -4.119784355163574
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.4347964525222778
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.970549583435059
+      Yaw: 1.3923641443252563
     Saved: ~
 Window Geometry:
   Camera:
@@ -347,5 +346,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1267
-  X: 1148
-  Y: 373
+  X: 785
+  Y: 337

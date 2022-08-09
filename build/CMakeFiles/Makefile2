@@ -4575,13 +4575,13 @@ clean: fsm/CMakeFiles/px4_pos_estimator.dir/clean
 # Directory level rules for directory grid_path_searcher
 
 # Convenience name for "all" pass in the directory.
-grid_path_searcher/all: grid_path_searcher/CMakeFiles/test.dir/all
+grid_path_searcher/all: grid_path_searcher/CMakeFiles/test_.dir/all
 grid_path_searcher/all: grid_path_searcher/CMakeFiles/astar_node.dir/all
 
 .PHONY : grid_path_searcher/all
 
 # Convenience name for "clean" pass in the directory.
-grid_path_searcher/clean: grid_path_searcher/CMakeFiles/test.dir/clean
+grid_path_searcher/clean: grid_path_searcher/CMakeFiles/test_.dir/clean
 grid_path_searcher/clean: grid_path_searcher/CMakeFiles/nav_msgs_generate_messages_eus.dir/clean
 grid_path_searcher/clean: grid_path_searcher/CMakeFiles/nav_msgs_generate_messages_nodejs.dir/clean
 grid_path_searcher/clean: grid_path_searcher/CMakeFiles/nav_msgs_generate_messages_cpp.dir/clean
@@ -4597,39 +4597,39 @@ grid_path_searcher/preinstall:
 .PHONY : grid_path_searcher/preinstall
 
 #=============================================================================
-# Target rules for target grid_path_searcher/CMakeFiles/test.dir
+# Target rules for target grid_path_searcher/CMakeFiles/test_.dir
 
 # All Build rule for target.
-grid_path_searcher/CMakeFiles/test.dir/all:
-	$(MAKE) -f grid_path_searcher/CMakeFiles/test.dir/build.make grid_path_searcher/CMakeFiles/test.dir/depend
-	$(MAKE) -f grid_path_searcher/CMakeFiles/test.dir/build.make grid_path_searcher/CMakeFiles/test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/flag/FLAG_ws/build/CMakeFiles --progress-num=84,85 "Built target test"
-.PHONY : grid_path_searcher/CMakeFiles/test.dir/all
+grid_path_searcher/CMakeFiles/test_.dir/all:
+	$(MAKE) -f grid_path_searcher/CMakeFiles/test_.dir/build.make grid_path_searcher/CMakeFiles/test_.dir/depend
+	$(MAKE) -f grid_path_searcher/CMakeFiles/test_.dir/build.make grid_path_searcher/CMakeFiles/test_.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/flag/FLAG_ws/build/CMakeFiles --progress-num=84,85 "Built target test_"
+.PHONY : grid_path_searcher/CMakeFiles/test_.dir/all
 
 # Include target in all.
-all: grid_path_searcher/CMakeFiles/test.dir/all
+all: grid_path_searcher/CMakeFiles/test_.dir/all
 
 .PHONY : all
 
 # Build rule for subdir invocation for target.
-grid_path_searcher/CMakeFiles/test.dir/rule: cmake_check_build_system
+grid_path_searcher/CMakeFiles/test_.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/flag/FLAG_ws/build/CMakeFiles 2
-	$(MAKE) -f CMakeFiles/Makefile2 grid_path_searcher/CMakeFiles/test.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 grid_path_searcher/CMakeFiles/test_.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/flag/FLAG_ws/build/CMakeFiles 0
-.PHONY : grid_path_searcher/CMakeFiles/test.dir/rule
+.PHONY : grid_path_searcher/CMakeFiles/test_.dir/rule
 
 # Convenience name for target.
-test: grid_path_searcher/CMakeFiles/test.dir/rule
+test_: grid_path_searcher/CMakeFiles/test_.dir/rule
 
-.PHONY : test
-
-# clean rule for target.
-grid_path_searcher/CMakeFiles/test.dir/clean:
-	$(MAKE) -f grid_path_searcher/CMakeFiles/test.dir/build.make grid_path_searcher/CMakeFiles/test.dir/clean
-.PHONY : grid_path_searcher/CMakeFiles/test.dir/clean
+.PHONY : test_
 
 # clean rule for target.
-clean: grid_path_searcher/CMakeFiles/test.dir/clean
+grid_path_searcher/CMakeFiles/test_.dir/clean:
+	$(MAKE) -f grid_path_searcher/CMakeFiles/test_.dir/build.make grid_path_searcher/CMakeFiles/test_.dir/clean
+.PHONY : grid_path_searcher/CMakeFiles/test_.dir/clean
+
+# clean rule for target.
+clean: grid_path_searcher/CMakeFiles/test_.dir/clean
 
 .PHONY : clean
 

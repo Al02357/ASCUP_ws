@@ -1819,6 +1819,19 @@ px4_pos_estimator/fast:
 .PHONY : px4_pos_estimator/fast
 
 #=============================================================================
+# Target rules for targets named test_
+
+# Build rule for target.
+test_: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_
+.PHONY : test_
+
+# fast build rule for target.
+test_/fast:
+	$(MAKE) -f grid_path_searcher/CMakeFiles/test_.dir/build.make grid_path_searcher/CMakeFiles/test_.dir/build
+.PHONY : test_/fast
+
+#=============================================================================
 # Target rules for targets named nav_msgs_generate_messages_eus
 
 # Build rule for target.
@@ -2374,6 +2387,7 @@ help:
 	@echo "... fsm_geneus"
 	@echo "... single_offboard"
 	@echo "... px4_pos_estimator"
+	@echo "... test_"
 	@echo "... nav_msgs_generate_messages_eus"
 	@echo "... nav_msgs_generate_messages_nodejs"
 	@echo "... nav_msgs_generate_messages_cpp"
