@@ -213,6 +213,9 @@ bool pathFinding(const Vector2d start_pt, const Vector2d target_pt)
     auto grid_twist    = _astar_path_finder->getTwist3();
     // auto visited_nodes = _astar_path_finder->getVisitedNodes();
 
+    // 替换起始点为_start_pt
+    // grid_path[0] = _start_pt;
+    // grid_twist[0] = _start_pt;
     //Visualize the result
     visGridPath (grid_path, false);
     // visVisitedNode(visited_nodes);

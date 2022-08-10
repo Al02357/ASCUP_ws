@@ -27,6 +27,7 @@
 #include <fsm/command_acc.h>
 #include <bspline_race/bspline_race.h>
 #include <std_msgs/Bool.h>
+#include <sensor_msgs/Imu.h>
 using namespace std;
 
 static mavros_msgs::State current_state;
@@ -51,8 +52,8 @@ bool bs_replanned = true;
 bool arrived = false;
 Eigen::Vector3d pos_drone_fcu_lst;
 vector<Eigen::Vector2d> traj;
-geometry_msgs::PoseStamped _aim_;
-
+Eigen::Matrix3d roat;
+Eigen::Vector3d acc_global;
 
 
 /*----------ASCUP----------*/
@@ -152,6 +153,7 @@ void traj_cb(const bspline_race::BsplineTraj::ConstPtr & msg)
         double error_scale = sqrt(pow((msg->position[msg->position.size()-1].pose.position.x-pos_drone_fcu[0]),2)
                                                            +pow((msg->position[msg->position.size()-1].pose.position.y-pos_drone_fcu[1]),2))
                                                            +0.1;
+                                                        //    error_scale = 0.0;
         // cout<<"scallllllllllllllllllllllllle:"<<error_scale<<endl;
         for(int i = msg->position.size()-1;i>=0;i--)
         {
@@ -221,8 +223,24 @@ void pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     pos_drone_fcu_lst = pos_drone_fcu;
     pos_drone_fcu = Eigen::Vector3d(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
     yaw_drone_fcu = Eigen::Vector2d(msg->pose.orientation.x, msg->pose.orientation.w);
+    tf::Quaternion q = {msg->pose.orientation.x,msg->pose.orientation.y,msg->pose.orientation.z,msg->pose.orientation.w};
+       tf::Matrix3x3 matrix;
+       matrix.setRotation(q);/*通过四元数计算得到旋转矩阵*/
+       tf::Vector3 v6,v7,v8;
+       v6=matrix[0];
+       v7=matrix[1];
+       v8=matrix[2];
+       roat<<v6[0],v6[1],v6[2],
+                    v7[0],v7[1],v7[2],
+                    v8[0],v8[1],v8[2];
 }
-
+void acc_cb(const sensor_msgs::Imu::ConstPtr & imu_msg)
+{
+    acc_global << imu_msg->linear_acceleration.x,imu_msg->linear_acceleration.y,imu_msg->linear_acceleration.z;
+    acc_global = roat * acc_global;
+    cout<<"--------------------------acc--------------------------------\n";
+    cout<<acc_global<<endl;
+}
 void UdpListen(const uint16_t cport)
 {
     ros::NodeHandle nh;
@@ -336,6 +354,7 @@ int main(int argc, char **argv)
     ros::Subscriber bt_wp= nh.subscribe("/bt/waypoint",100,BT_wp_cb);           //BT Tree waypoint
     ros::Subscriber voltage_sub = nh.subscribe<sensor_msgs::BatteryState>
             ("/mavros/battery", 300, vtg_cb);
+    ros::Subscriber acc_sub = nh.subscribe<sensor_msgs::Imu>("/mavros/imu/data",10,acc_cb);
 
     /*----------AISHENG CUP----------*/
     ros::Subscriber box_sub = nh.subscribe<std_msgs::Float64MultiArray>
@@ -813,14 +832,13 @@ ROS_INFO("Rec: %d, %.3lf, %.3lf, %.3lf",cmdd,aim.pose.position.x,aim.pose.positi
 
         if(cmdd == 8)
         {
-            int k = 0;
         std_msgs::Bool pl_msg;
-        cout<<k++<<endl;
          if(traj.size() != 0)
         {
-            cout<<k++<<endl;
             Eigen::Vector2d ptr;
             ptr = *(traj.begin());
+            // double check_error = sqrt(pow((pos_drone_fcu[0]-ptr[0]),2) + pow((pos_drone_fcu[1]-ptr[1]),2));
+            // if(check_error<=0.2)    
             traj.erase(traj.begin());
             double rl,im;
             geometry_msgs::PoseStamped pos_ptr;
@@ -828,7 +846,7 @@ ROS_INFO("Rec: %d, %.3lf, %.3lf, %.3lf",cmdd,aim.pose.position.x,aim.pose.positi
             pos_ptr.pose.position.x = ptr(0);
             pos_ptr.pose.position.y = ptr(1);
             pos_ptr.pose.position.z = 0.8;
-            _aim_ = pos_ptr;
+            aim = pos_ptr;
             // ori
             Eigen::Vector2d ptr_ = *(traj.begin()+1);
             // ver3
@@ -839,20 +857,20 @@ ROS_INFO("Rec: %d, %.3lf, %.3lf, %.3lf",cmdd,aim.pose.position.x,aim.pose.positi
             if(arg_<0) arg_ = arg_ + 2*PI;
 
             geometry_msgs::Quaternion geo_q = tf::createQuaternionMsgFromYaw(arg_);
-            _aim_.pose.orientation = geo_q;
+            aim.pose.orientation = geo_q;
             pl_msg.data = false;
             planning_pub.publish(pl_msg);
         }
         else
         {
-            cout<<k++<<endl;
-            pl_msg.data = true;
-            planning_pub.publish(pl_msg);
             bs_replanned = true;
         }
+        pl_msg.data = true;
+           planning_pub.publish(pl_msg);
+
         // rate.sleep();
-        cout<<k++<<endl;
-        local_pos_pub.publish(_aim_);
+        local_pos_pub.publish(aim);// BUG
+        
     }
 
 
