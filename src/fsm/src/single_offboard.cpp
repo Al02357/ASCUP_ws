@@ -51,7 +51,6 @@ bool bs_replanned = true;
 bool arrived = false;
 Eigen::Vector3d pos_drone_fcu_lst;
 vector<Eigen::Vector2d> traj;
-geometry_msgs::PoseStamped _aim_;
 
 
 
@@ -828,7 +827,7 @@ ROS_INFO("Rec: %d, %.3lf, %.3lf, %.3lf",cmdd,aim.pose.position.x,aim.pose.positi
             pos_ptr.pose.position.x = ptr(0);
             pos_ptr.pose.position.y = ptr(1);
             pos_ptr.pose.position.z = 0.8;
-            _aim_ = pos_ptr;
+            aim = pos_ptr;
             // ori
             Eigen::Vector2d ptr_ = *(traj.begin()+1);
             // ver3
@@ -839,7 +838,7 @@ ROS_INFO("Rec: %d, %.3lf, %.3lf, %.3lf",cmdd,aim.pose.position.x,aim.pose.positi
             if(arg_<0) arg_ = arg_ + 2*PI;
 
             geometry_msgs::Quaternion geo_q = tf::createQuaternionMsgFromYaw(arg_);
-            _aim_.pose.orientation = geo_q;
+            aim.pose.orientation = geo_q;
             pl_msg.data = false;
             planning_pub.publish(pl_msg);
         }
@@ -852,7 +851,7 @@ ROS_INFO("Rec: %d, %.3lf, %.3lf, %.3lf",cmdd,aim.pose.position.x,aim.pose.positi
         }
         // rate.sleep();
         cout<<k++<<endl;
-        local_pos_pub.publish(_aim_);
+        local_pos_pub.publish(aim);
     }
 
 
