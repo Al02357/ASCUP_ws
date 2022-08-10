@@ -15,6 +15,7 @@ bspline_race/CMakeFiles/flag_planner.dir/src/test_planning.cpp.o: /opt/ros/melod
 bspline_race/CMakeFiles/flag_planner.dir/src/test_planning.cpp.o: /opt/ros/melodic/include/geometry_msgs/Transform.h
 bspline_race/CMakeFiles/flag_planner.dir/src/test_planning.cpp.o: /opt/ros/melodic/include/geometry_msgs/TransformStamped.h
 bspline_race/CMakeFiles/flag_planner.dir/src/test_planning.cpp.o: /opt/ros/melodic/include/geometry_msgs/Twist.h
+bspline_race/CMakeFiles/flag_planner.dir/src/test_planning.cpp.o: /opt/ros/melodic/include/geometry_msgs/TwistStamped.h
 bspline_race/CMakeFiles/flag_planner.dir/src/test_planning.cpp.o: /opt/ros/melodic/include/geometry_msgs/TwistWithCovariance.h
 bspline_race/CMakeFiles/flag_planner.dir/src/test_planning.cpp.o: /opt/ros/melodic/include/geometry_msgs/Vector3.h
 bspline_race/CMakeFiles/flag_planner.dir/src/test_planning.cpp.o: /opt/ros/melodic/include/geometry_msgs/Vector3Stamped.h

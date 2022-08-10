@@ -83,6 +83,8 @@ std_msgs/Bool.h
 -
 std_srvs/Trigger.h
 -
+geometry_msgs/TwistStamped.h
+-
 bspline_race/BsplineTraj.h
 -
 bspline_race/EdtTransform.hpp
@@ -280,6 +282,26 @@ ros/message_operations.h
 geometry_msgs/Vector3.h
 -
 geometry_msgs/Vector3.h
+-
+
+/opt/ros/melodic/include/geometry_msgs/TwistStamped.h
+string
+-
+vector
+-
+map
+-
+ros/types.h
+-
+ros/serialization.h
+-
+ros/builtin_message_traits.h
+-
+ros/message_operations.h
+-
+std_msgs/Header.h
+-
+geometry_msgs/Twist.h
 -
 
 /opt/ros/melodic/include/geometry_msgs/TwistWithCovariance.h

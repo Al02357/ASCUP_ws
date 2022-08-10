@@ -238,8 +238,8 @@ void acc_cb(const sensor_msgs::Imu::ConstPtr & imu_msg)
 {
     acc_global << imu_msg->linear_acceleration.x,imu_msg->linear_acceleration.y,imu_msg->linear_acceleration.z;
     acc_global = roat * acc_global;
-    cout<<"--------------------------acc--------------------------------\n";
-    cout<<acc_global<<endl;
+    // cout<<"--------------------------acc--------------------------------\n";
+    // cout<<acc_global<<endl;
 }
 void UdpListen(const uint16_t cport)
 {
@@ -370,6 +370,8 @@ int main(int argc, char **argv)
             ("/move_base_simple/goal", 100);
 
     ros::Publisher planning_pub = nh.advertise<std_msgs::Bool>("/planning_required",1);
+
+    ros::Publisher acc_pub = nh.advertise<geometry_msgs::Point>("/acc_global",1);
     
     /*-------------------------------*/
 
@@ -833,6 +835,11 @@ ROS_INFO("Rec: %d, %.3lf, %.3lf, %.3lf",cmdd,aim.pose.position.x,aim.pose.positi
         if(cmdd == 8)
         {
         std_msgs::Bool pl_msg;
+        geometry_msgs::Point msg;
+        msg.x = acc_global[0];
+        msg.y = acc_global[1];
+        msg.z = acc_global[2];
+        acc_pub.publish(msg);
          if(traj.size() != 0)
         {
             Eigen::Vector2d ptr;
@@ -863,10 +870,11 @@ ROS_INFO("Rec: %d, %.3lf, %.3lf, %.3lf",cmdd,aim.pose.position.x,aim.pose.positi
         }
         else
         {
+                    pl_msg.data = true;
+           planning_pub.publish(pl_msg);
             bs_replanned = true;
         }
-        pl_msg.data = true;
-           planning_pub.publish(pl_msg);
+
 
         // rate.sleep();
         local_pos_pub.publish(aim);// BUG

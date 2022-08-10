@@ -15,6 +15,7 @@ bspline_race/CMakeFiles/bspline_race.dir/src/bspline_race.cpp.o: /opt/ros/melodi
 bspline_race/CMakeFiles/bspline_race.dir/src/bspline_race.cpp.o: /opt/ros/melodic/include/geometry_msgs/Transform.h
 bspline_race/CMakeFiles/bspline_race.dir/src/bspline_race.cpp.o: /opt/ros/melodic/include/geometry_msgs/TransformStamped.h
 bspline_race/CMakeFiles/bspline_race.dir/src/bspline_race.cpp.o: /opt/ros/melodic/include/geometry_msgs/Twist.h
+bspline_race/CMakeFiles/bspline_race.dir/src/bspline_race.cpp.o: /opt/ros/melodic/include/geometry_msgs/TwistStamped.h
 bspline_race/CMakeFiles/bspline_race.dir/src/bspline_race.cpp.o: /opt/ros/melodic/include/geometry_msgs/TwistWithCovariance.h
 bspline_race/CMakeFiles/bspline_race.dir/src/bspline_race.cpp.o: /opt/ros/melodic/include/geometry_msgs/Vector3.h
 bspline_race/CMakeFiles/bspline_race.dir/src/bspline_race.cpp.o: /opt/ros/melodic/include/geometry_msgs/Vector3Stamped.h

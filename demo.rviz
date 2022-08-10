@@ -145,7 +145,7 @@ Visualization Manager:
       Marker Topic: /astar_node/grid_path_vis
       Name: Marker
       Namespaces:
-        demo_node/astar_path: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -178,7 +178,7 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 2.3399999141693115
+        Max Value: 2.140000104904175
         Min Value: 0.03999999910593033
         Value: true
       Axis: Z
@@ -314,18 +314,18 @@ Visualization Manager:
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 4.536377906799316
-        Y: -4.102661609649658
-        Z: -1.9966092109680176
+        X: -1.0744593143463135
+        Y: -1.7128651142120361
+        Z: -2.0685038566589355
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.4347964525222778
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.970549583435059
+      Yaw: 1.542365550994873
     Saved: ~
 Window Geometry:
   Camera:
@@ -347,5 +347,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1267
-  X: 1148
-  Y: 373
+  X: 171
+  Y: 499

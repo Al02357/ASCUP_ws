@@ -683,9 +683,13 @@ namespace FLAG_Race
 
         // 订阅无人机状态
         vel_suber = nh.subscribe<geometry_msgs::TwistStamped>("/mavros/local_position/velocity_local",1,&plan_manager::vel_subCallback,this);
-        // acc_suber = 
+        acc_suber = nh.subscribe<geometry_msgs::Point>("/acc_global",1,&plan_manager::acc_subCallback,this);
     }
-
+void plan_manager::acc_subCallback(const geometry_msgs::Point::ConstPtr & acc_msg)
+{
+    current_acc[0] = acc_msg->x;
+    current_acc[1] = acc_msg->y;
+}
 void plan_manager::vel_subCallback(const geometry_msgs::TwistStamped::ConstPtr & vel_msg)
 {
     current_vel(0) = vel_msg->twist.linear.x;
@@ -765,16 +769,15 @@ void plan_manager::vel_subCallback(const geometry_msgs::TwistStamped::ConstPtr &
         
         //读取首末位置
         Eigen::Vector2d start_point,end_point;
-        Eigen::Vector2d start_vel,end_vel;//FIXME JS
-        start_vel = current_vel;
         start_point = *astar_path_.begin(); 
         end_point = *(astar_path_.end()-1); 
         initial_state.resize(3,2);
         terminal_state.resize(3,2);
         initial_state<< start_point(0),start_point(1),
-	                                //    start_vel(0),    start_vel(1),
-                                    0.0,0.0,
-		                                0.0, 0.0;
+	                                   current_vel(0),current_vel(1),
+                                       current_acc(0),current_acc(1);
+                                    // 0.0,0.0,
+		                            //     0.0, 0.0;
         terminal_state <<    end_point(0), end_point(1),
 		                                        0.0, 0.0,
 	                                            0.0, 0.0;
